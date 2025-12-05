@@ -10,8 +10,17 @@ import {
   ChevronRight,
   RefreshCw,
   BarChart3,
-  X, // 알림 닫기 버튼용
-  Zap, // KHAI 차트 설명용
+  X,
+  Zap,
+  Leaf,
+  CloudDrizzle,
+  Sun,
+  Flame,
+  CheckCircle,
+  MinusCircle,
+  Shield,
+  Home,
+  LogOut,
 } from "lucide-react";
 import {
   LineChart,
@@ -21,18 +30,321 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts"; // ⭐ Recharts import 추가
+} from "recharts";
+
+// Login 컴포넌트 임포트 (실제로는 별도 파일)
+const Login = ({ onClose, onSwitchToSignup, onLoginSuccess }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = () => {
+    setError("");
+    if (!email || !password) {
+      setError("이메일과 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+    const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const user = storedUsers.find(
+      (u) => u.email === email && u.password === password
+    );
+    if (user) {
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      onLoginSuccess(user);
+      onClose();
+    } else {
+      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") handleSubmit();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">로그인</h2>
+          <p className="text-gray-500">Air-Life Guide에 오신 것을 환영합니다</p>
+        </div>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              이메일
+            </label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                placeholder="example@email.com"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              비밀번호
+            </label>
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <CheckCircle className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={handleSubmit}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+          >
+            로그인
+          </button>
+        </div>
+        <div className="mt-6 text-center">
+          <p className="text-gray-600 text-sm">
+            계정이 없으신가요?{" "}
+            <button
+              onClick={onSwitchToSignup}
+              className="text-blue-500 hover:text-blue-600 font-semibold transition"
+            >
+              회원가입
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Signup 컴포넌트 임포트 (실제로는 별도 파일)
+const Signup = ({ onClose, onSwitchToLogin, onSignupSuccess }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = () => {
+    setError("");
+    if (!name || !email || !password || !confirmPassword) {
+      setError("모든 필드를 입력해주세요.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("비밀번호는 최소 6자 이상이어야 합니다.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
+    const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    if (storedUsers.some((u) => u.email === email)) {
+      setError("이미 등록된 이메일입니다.");
+      return;
+    }
+    const newUser = {
+      id: Date.now(),
+      name,
+      email,
+      password,
+      createdAt: new Date().toISOString(),
+    };
+    storedUsers.push(newUser);
+    localStorage.setItem("users", JSON.stringify(storedUsers));
+    localStorage.setItem("currentUser", JSON.stringify(newUser));
+    onSignupSuccess(newUser);
+    onClose();
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") handleSubmit();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative max-h-[90vh] overflow-y-auto">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">회원가입</h2>
+          <p className="text-gray-500">새로운 계정을 만들어보세요</p>
+        </div>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              이름
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                placeholder="홍길동"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              이메일
+            </label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                placeholder="example@email.com"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              비밀번호
+            </label>
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <CheckCircle className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              최소 6자 이상 입력해주세요
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              비밀번호 확인
+            </label>
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <CheckCircle className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={handleSubmit}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+          >
+            회원가입
+          </button>
+        </div>
+        <div className="mt-6 text-center">
+          <p className="text-gray-600 text-sm">
+            이미 계정이 있으신가요?{" "}
+            <button
+              onClick={onSwitchToLogin}
+              className="text-blue-500 hover:text-blue-600 font-semibold transition"
+            >
+              로그인
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- 상수 및 유틸리티 함수 ---
 const AIR_GRADES = {
-  좋음: {
-    color: "text-green-600",
-    bg: "bg-green-100",
-    hex: "getGradeFromPM10",
-  }, // hex 값 추가
-  보통: { color: "text-yellow-600", bg: "bg-yellow-100", hex: "#f59e0b" }, // hex 값 추가
-  나쁨: { color: "text-red-600", bg: "bg-red-100", hex: "#ef4444" }, // hex 값 추가
-  매우나쁨: { color: "text-purple-600", bg: "bg-purple-100", hex: "#8b5cf6" }, // hex 값 추가
+  좋음: { color: "text-green-600", bg: "bg-green-100", lineColor: "#10b981" },
+  보통: { color: "text-yellow-600", bg: "bg-yellow-100", lineColor: "#f59e0b" },
+  나쁨: { color: "text-red-600", bg: "bg-red-100", lineColor: "#ef4444" },
+  매우나쁨: {
+    color: "text-purple-600",
+    bg: "bg-purple-100",
+    lineColor: "#8b5cf6",
+  },
+  "자료 미수집": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    lineColor: "#9ca3af",
+  },
 };
 
 const getGradeFromPM10 = (pm10) => {
@@ -42,7 +354,6 @@ const getGradeFromPM10 = (pm10) => {
   return "매우나쁨";
 };
 
-// ⭐ KHAI 등급 유틸리티 함수 추가
 const getKhaiGrade = (khai) => {
   if (khai <= 50) return "좋음";
   if (khai <= 100) return "보통";
@@ -50,25 +361,46 @@ const getKhaiGrade = (khai) => {
   return "매우나쁨";
 };
 
-// ⭐ API 응답 데이터를 그래프 형식으로 변환하는 함수 추가
+const getGradeFromGas = (type, value) => {
+  const v = parseFloat(value);
+  if (isNaN(v) || v < 0) return "자료 미수집";
+  switch (type) {
+    case "CO":
+      if (v <= 2.0) return "좋음";
+      if (v <= 9.0) return "보통";
+      if (v <= 15.0) return "나쁨";
+      return "매우나쁨";
+    case "NO2":
+      if (v <= 0.03) return "좋음";
+      if (v <= 0.06) return "보통";
+      if (v <= 0.2) return "나쁨";
+      return "매우나쁨";
+    case "SO2":
+      if (v <= 0.02) return "좋음";
+      if (v <= 0.05) return "보통";
+      if (v <= 0.15) return "나쁨";
+      return "매우나쁨";
+    case "O3":
+      if (v <= 0.03) return "좋음";
+      if (v <= 0.09) return "보통";
+      if (v <= 0.15) return "나쁨";
+      return "매우나쁨";
+    default:
+      return "자료 미수집";
+  }
+};
+
 const transformDataForChart = (items) => {
   if (!items || items.length === 0) return [];
-
-  // 그래프를 시간 순서대로 표시하기 위해 배열을 뒤집습니다.
   const reversedItems = [...items].reverse();
-
   return reversedItems.map((item) => {
     const khaiValue = parseInt(item.khaiValue) || 0;
-
-    // dataTime (예: 2025-11-27 15:00)에서 시간 부분만 추출
     const dataTime = item.dataTime ? item.dataTime.split(" ")[1] : "N/A";
-    const displayTime = dataTime.substring(0, 5); // 15:00
-
+    const displayTime = dataTime.substring(0, 5);
     return {
       time: displayTime,
       khai: khaiValue,
       grade: getKhaiGrade(khaiValue),
-      pm25: parseInt(item.pm25Value) || 0,
       pm10: parseInt(item.pm10Value) || 0,
       "좋음 기준": 50,
       "보통 기준": 100,
@@ -102,13 +434,94 @@ const GradeBadge = ({ grade }) => {
   );
 };
 
-const AirQualitySummary = ({ grade, pm10, pm25, time, isLoading }) => {
+const PollutantDetailCard = ({
+  title,
+  value,
+  unit,
+  type,
+  icon: Icon,
+  isLoading,
+}) => {
+  const grade = getGradeFromGas(type, value);
+  const gradeInfo = AIR_GRADES[grade] || AIR_GRADES["자료 미수집"];
+  const displayValue = isNaN(parseFloat(value)) ? "N/A" : value;
+
+  return (
+    <div
+      className={`p-4 rounded-xl flex items-center shadow-sm hover:shadow-md transition-all duration-200 bg-white`}
+    >
+      <div className={`p-3 rounded-full mr-4 ${gradeInfo.bg} flex-shrink-0`}>
+        <Icon className={`w-6 h-6 ${gradeInfo.color}`} />
+      </div>
+      <div className="flex-grow">
+        <p className="text-sm font-medium text-gray-500">{title}</p>
+        <div className="flex items-baseline justify-between">
+          <p className="text-2xl font-bold text-gray-800">
+            {isLoading ? (
+              <span className="animate-pulse bg-gray-200 w-12 h-6 inline-block rounded"></span>
+            ) : (
+              <span>
+                {displayValue}
+                <span className="text-sm font-normal text-gray-500 ml-1">
+                  {unit}
+                </span>
+              </span>
+            )}
+          </p>
+          <GradeBadge grade={grade} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RecommendationMessage = ({ grade }) => {
+  const gradeInfo = AIR_GRADES[grade] || AIR_GRADES["보통"];
+  let message = "";
+  let Icon = CheckCircle;
+
+  switch (grade) {
+    case "좋음":
+      message = "모든 실외 활동에 적합합니다. 쾌적한 야외 활동을 즐기세요.";
+      Icon = CheckCircle;
+      break;
+    case "보통":
+      message =
+        "민감군을 제외한 일반인은 실외 활동이 가능합니다. 장시간 무리한 활동은 자제하세요.";
+      Icon = Shield;
+      break;
+    case "나쁨":
+      message =
+        "모든 실외 활동을 자제하고, 외출 시 KF94 마스크를 반드시 착용하세요.";
+      Icon = AlertCircle;
+      break;
+    case "매우나쁨":
+      message =
+        "실외 활동을 금지하고, 실내 공기청정기를 가동하며 창문은 닫아주세요.";
+      Icon = Home;
+      break;
+    default:
+      message = "자료 미수집 또는 알 수 없는 등급입니다. 안전에 유의하세요.";
+      Icon = MinusCircle;
+  }
+
+  return (
+    <div className={`p-3 mt-4 rounded-lg flex items-start ${gradeInfo.bg}`}>
+      <Icon
+        className={`w-5 h-5 mt-0.5 mr-3 flex-shrink-0 ${gradeInfo.color}`}
+      />
+      <p className={`text-sm font-medium ${gradeInfo.color}`}>{message}</p>
+    </div>
+  );
+};
+
+const AirQualitySummary = ({ grade, pm10, co, time, isLoading }) => {
   const gradeInfo = AIR_GRADES[grade] || AIR_GRADES["좋음"];
 
   if (isLoading) {
     return (
       <DashboardCard title="대기 현황 요약" className="h-full">
-        <div className="flex items-center justify-center h-32">
+        <div className="flex items-center justify-center h-40">
           <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
           <span className="ml-3 text-gray-500">데이터 로딩 중...</span>
         </div>
@@ -117,48 +530,54 @@ const AirQualitySummary = ({ grade, pm10, pm25, time, isLoading }) => {
   }
 
   return (
-    <DashboardCard title="대기 현황 요약" className="h-full">
-      <div className="flex flex-wrap items-start justify-between">
-        <div className="mb-4 sm:mb-0">
-          <p className={`text-5xl font-extrabold ${gradeInfo.color} mb-2`}>
+    <DashboardCard
+      title="대기 현황 요약"
+      className="h-full flex flex-col justify-between"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="mr-6 flex-shrink-0">
+          <p
+            className={`text-5xl sm:text-6xl font-extrabold ${gradeInfo.color} mb-2`}
+          >
             {grade}
           </p>
-          <p className="text-xs text-gray-500">업데이트: {time}</p>
+          <div className="text-sm text-gray-500 space-y-1">
+            <p className="text-xs">업데이트: {time}</p>
+            <p className="flex items-center text-xs">
+              <MapPin className="w-3 h-3 mr-1 text-gray-400" />
+              측정소: 종로구
+            </p>
+          </div>
         </div>
-        <div className="flex space-x-3 sm:space-x-4">
-          <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg min-w-[90px]">
-            <p className="text-xs text-gray-500 mb-1">미세먼지 PM10</p>
-            <p className="text-xl font-bold text-gray-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-grow min-w-[180px] sm:min-w-[220px]">
+          <div className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg shadow-inner h-20">
+            <p className="text-xs text-gray-500 mb-0.5">미세먼지 PM10</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-800">
               {pm10}
               <span className="text-sm font-normal">㎍/㎥</span>
             </p>
           </div>
-          <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg min-w-[90px]">
-            <p className="text-xs text-gray-500 mb-1">초미세먼지 PM2.5</p>
-            <p className="text-xl font-bold text-gray-800">
-              {pm25}
-              <span className="text-sm font-normal">㎍/㎥</span>
+          <div className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg shadow-inner h-20">
+            <p className="text-xs text-gray-500 mb-0.5">일산화탄소 CO</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-800">
+              {co}
+              <span className="text-sm font-normal">ppm</span>
             </p>
           </div>
         </div>
-        <div className="hidden lg:block text-blue-500 mt-1 ml-4">
-          <Cloud className="w-12 h-12" />
-        </div>
       </div>
+      <RecommendationMessage grade={grade} />
     </DashboardCard>
   );
 };
 
-// ⭐ HourlyForecast 컴포넌트를 KhaiIndexChart로 대체하고 기존 코드는 삭제합니다.
 const KhaiIndexChart = ({ chartData, isLoading }) => {
-  // 그래프 선의 색상을 현재(가장 최근) 등급에 따라 동적으로 결정
-  const getStrokeColor = (khai) => {
-    const grade = getKhaiGrade(khai);
-    return AIR_GRADES[grade].hex;
-  };
+  const latestKhai =
+    chartData.length > 0 ? chartData[chartData.length - 1].khai : 0;
+  const grade = getKhaiGrade(latestKhai);
+  const lineStrokeColor = AIR_GRADES[grade].lineColor;
 
-  // Custom Tooltip (마우스 올렸을 때 나타나는 정보 창)
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -168,7 +587,7 @@ const KhaiIndexChart = ({ chartData, isLoading }) => {
             KHAI 지수: <span className="font-semibold">{data.khai}</span>
           </p>
           <p className="text-gray-600">
-            PM2.5: <span className="font-semibold">{data.pm25}㎍/㎥</span>
+            PM10: <span className="font-semibold">{data.pm10}㎍/㎥</span>
           </p>
           <p className="text-gray-600">
             등급: <GradeBadge grade={data.grade} />
@@ -200,10 +619,7 @@ const KhaiIndexChart = ({ chartData, isLoading }) => {
     );
   }
 
-  // Y축 도메인 동적 설정 (최대값보다 20 높게 설정)
   const yDomain = [0, Math.max(150, ...chartData.map((d) => d.khai)) + 20];
-  const latestKhai = chartData[chartData.length - 1].khai;
-  const lineStrokeColor = getStrokeColor(latestKhai);
 
   return (
     <DashboardCard
@@ -241,8 +657,6 @@ const KhaiIndexChart = ({ chartData, isLoading }) => {
               }}
             />
             <Tooltip content={<CustomTooltip />} />
-
-            {/* 실제 KHAI 값 라인 */}
             <Line
               type="monotone"
               dataKey="khai"
@@ -256,8 +670,6 @@ const KhaiIndexChart = ({ chartData, isLoading }) => {
                 strokeWidth: 2,
               }}
             />
-
-            {/* 기준선: 좋음(50) 및 보통(100) */}
             <Line
               type="monotone"
               dataKey="좋음 기준"
@@ -292,23 +704,34 @@ const RecommendationCard = ({
   title,
   description,
   icon: Icon,
-  isSafe = true,
+  grade,
+  recommendedGrade = "좋음",
 }) => {
-  const color = isSafe
-    ? "text-green-500 bg-green-50"
-    : "text-red-500 bg-red-50";
+  const isRecommended = grade === recommendedGrade;
+  const isNeutral = recommendedGrade === "모든";
+
+  let color;
+  if (isNeutral) {
+    color = "text-blue-500 bg-blue-50";
+  } else if (isRecommended) {
+    color = "text-green-500 bg-green-50";
+  } else if (grade === "나쁨" || grade === "매우나쁨") {
+    color = "text-red-500 bg-red-50";
+  } else {
+    color = "text-yellow-500 bg-yellow-50";
+  }
+
   return (
-    <div className="flex items-center justify-between p-4 bg-white rounded-xl shadow-md transition-shadow duration-200 hover:shadow-lg cursor-pointer">
-      <div className="flex items-center">
-        <div className={`p-3 rounded-xl mr-4 ${color}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-        <div>
-          <p className="text-base font-semibold text-gray-800">{title}</p>
-          <p className="text-sm text-gray-500">{description}</p>
-        </div>
+    <div className="flex flex-col p-5 bg-white rounded-xl shadow-md transition-shadow duration-200 hover:shadow-lg cursor-pointer h-full items-center text-center justify-between">
+      <div className={`p-3 rounded-xl mb-4 flex-shrink-0 ${color}`}>
+        <Icon className="w-8 h-8" />
       </div>
-      <ChevronRight className="w-5 h-5 text-gray-400" />
+      <div className="flex-grow flex flex-col justify-center">
+        <p className="text-base font-bold text-gray-800 leading-snug mb-1">
+          {title}
+        </p>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
     </div>
   );
 };
@@ -320,8 +743,14 @@ const HealthTipItem = ({ title, description }) => (
   </div>
 );
 
-const Header = ({ onRefresh, isRefreshing }) => (
-  <header className="bg-white shadow-sm sticky top-0 z-10">
+const Header = ({
+  onRefresh,
+  isRefreshing,
+  currentUser,
+  onUserClick,
+  onLogout,
+}) => (
+  <header className="bg-white shadow-md sticky top-0 z-10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
       <h1 className="text-xl font-bold text-gray-800 flex items-center">
         <Wind className="h-6 w-6 text-blue-500 mr-2" />
@@ -337,15 +766,40 @@ const Header = ({ onRefresh, isRefreshing }) => (
         >
           <RefreshCw className="w-5 h-5" />
         </button>
-        <button className="p-2 text-gray-500 hover:text-blue-600 transition duration-150 rounded-full hover:bg-gray-100">
-          <User className="w-6 h-6" />
-        </button>
+        {currentUser ? (
+          <div className="relative group">
+            <button className="p-2 text-gray-500 hover:text-blue-600 transition duration-150 rounded-full hover:bg-gray-100 flex items-center">
+              <User className="w-6 h-6" />
+            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="p-3 border-b">
+                <p className="text-sm font-semibold text-gray-800">
+                  {currentUser.name}
+                </p>
+                <p className="text-xs text-gray-500">{currentUser.email}</p>
+              </div>
+              <button
+                onClick={onLogout}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                로그아웃
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={onUserClick}
+            className="p-2 text-gray-500 hover:text-blue-600 transition duration-150 rounded-full hover:bg-gray-100"
+          >
+            <User className="w-6 h-6" />
+          </button>
+        )}
       </div>
     </div>
   </header>
 );
 
-// --- 커스텀 아이콘 ---
 const MaskIcon = (props) => (
   <svg
     {...props}
@@ -397,12 +851,10 @@ const AirVentIcon = (props) => (
   </svg>
 );
 
-// --- NotificationSystem 컴포넌트 ---
 const NotificationSystem = ({ message, type, onClose }) => {
   if (!message) return null;
 
   let bgColor, iconColor, Icon;
-
   switch (type) {
     case "warning":
       bgColor = "bg-yellow-500";
@@ -420,11 +872,10 @@ const NotificationSystem = ({ message, type, onClose }) => {
       Icon = Bell;
   }
 
-  // fadeInSlideUp 애니메이션이 CSS 파일에 정의되어 있다고 가정합니다.
   return (
     <div className="fixed top-20 right-5 z-50 max-w-sm w-full">
       <div
-        className={`flex items-center p-4 rounded-lg shadow-2xl text-white transform transition-all duration-500 ease-in-out fadeInSlideUp ${bgColor}`}
+        className={`flex items-center p-4 rounded-lg shadow-2xl text-white transform transition-all duration-500 ease-in-out translate-y-0 opacity-100 ${bgColor}`}
         role="alert"
       >
         <div className={`p-2 rounded-full ${iconColor} bg-opacity-20 mr-3`}>
@@ -442,7 +893,6 @@ const NotificationSystem = ({ message, type, onClose }) => {
   );
 };
 
-// --- UserSettings 컴포넌트 ---
 const UserSettings = ({ isAlertSettingOn, setIsAlertSettingOn }) => {
   const SettingItem = ({
     title,
@@ -496,35 +946,70 @@ const UserSettings = ({ isAlertSettingOn, setIsAlertSettingOn }) => {
   );
 };
 
-// --- 메인 App 컴포넌트 ---
 export default function App() {
-  // ⭐ 1. 상태 관리: 기존 상태
   const [airData, setAirData] = useState({
     grade: "보통",
     pm10: "45",
-    pm25: "28",
+    co: "0.5",
+    no2: "0.021",
+    so2: "0.003",
+    o3: "0.023",
     time: "오후 3:23:46",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [apiKeyWarning, setApiKeyWarning] = useState(true);
-
-  // ⭐ 1. 상태 관리: 추가된 알림 및 설정 상태 및 그래프 데이터 상태 추가
   const [notification, setNotification] = useState({
     message: "",
     type: "default",
   });
   const [isAlertSettingOn, setIsAlertSettingOn] = useState(true);
-  const [khaiChartData, setKhaiChartData] = useState([]); // ⭐ 그래프 데이터 상태 추가
+  const [khaiChartData, setKhaiChartData] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
 
-  // 🚨 API 키는 여기에 정의되어 있습니다.
   const SERVICE_KEY =
     "7c766ef46d11aaf55f454e201d707bec4da8d614b11ed1132ebfbe21e10c88bd";
 
-  // ⭐ API 호출 함수: 24시간 데이터를 요청하고 SERVICE_KEY를 사용하도록 수정
+  useEffect(() => {
+    const storedUser = localStorage.getItem("currentUser");
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    setNotification({
+      message: `환영합니다, ${user.name}님!`,
+      type: "default",
+    });
+    setTimeout(() => setNotification({ message: "" }), 3000);
+  };
+
+  const handleSignupSuccess = (user) => {
+    setCurrentUser(user);
+    setNotification({
+      message: `회원가입이 완료되었습니다. 환영합니다, ${user.name}님!`,
+      type: "default",
+    });
+    setTimeout(() => setNotification({ message: "" }), 3000);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    setNotification({ message: "로그아웃되었습니다.", type: "default" });
+    setTimeout(() => setNotification({ message: "" }), 3000);
+  };
+
+  const handleUserClick = () => {
+    setShowLogin(true);
+  };
+
   const fetchAllAirQualityData = useCallback(
     async (stationName = "종로구") => {
-      // API 키가 비어있는지 확인
       if (!SERVICE_KEY) {
         console.warn(
           "❌ SERVICE_KEY가 비어있어 API 호출을 건너뛰고 샘플 데이터를 사용합니다."
@@ -533,128 +1018,105 @@ export default function App() {
       }
 
       try {
-        // API 호출 URL: numOfRows를 24로 설정하여 24시간 데이터를 요청
         const apiUrl = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?stationName=${encodeURIComponent(
           stationName
         )}&dataTerm=DAILY&pageNo=1&numOfRows=24&returnType=json&serviceKey=${SERVICE_KEY}`;
-
-        console.log("🌐 24시간 API 호출 시작:", stationName);
         const response = await fetch(apiUrl);
         const data = await response.json();
 
-        if (data.response?.body?.items) {
-          // 24시간 데이터 배열 전체를 반환
+        if (
+          data.response?.body?.items &&
+          Array.isArray(data.response.body.items) &&
+          data.response.body.items.length > 0
+        ) {
+          setApiKeyWarning(false);
           return data.response.body.items;
         }
 
-        throw new Error("데이터를 가져올 수 없습니다.");
+        setApiKeyWarning(true);
+        return null;
       } catch (error) {
         console.error("❌ 전체 API 호출 오류:", error);
+        setApiKeyWarning(true);
         return null;
       }
     },
     [SERVICE_KEY]
   );
 
-  // ⭐ 2. 새로고침 핸들러 (API 호출 및 그래프 데이터 처리 로직 포함)
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setIsLoading(true);
-
     setNotification({ message: "" });
 
-    const allData = await fetchAllAirQualityData("종로구"); // 24시간 데이터 가져오기
-
+    const allData = await fetchAllAirQualityData("종로구");
     let newAirData;
 
     if (allData && allData.length > 0) {
-      console.log(allData);
-      // 1. 그래프 데이터 설정: 24시간 데이터를 KHAI 차트 데이터로 변환
       const transformedChartData = transformDataForChart(allData);
-      setKhaiChartData(transformedChartData); // ⭐ 그래프 상태 업데이트
-
-      // 2. 대기 현황 요약 데이터 설정 (가장 최근 데이터: 배열의 첫 번째 항목)
+      setKhaiChartData(transformedChartData);
       const realtimeData = allData[0];
       const pm10Value = parseInt(realtimeData.pm10Value) || 0;
-      const pm25Value = parseInt(realtimeData.pm25Value) || 0;
+      const coValue =
+        realtimeData.coValue !== "-" && realtimeData.coValue
+          ? parseFloat(realtimeData.coValue).toFixed(3)
+          : "N/A";
+      const no2Value =
+        realtimeData.no2Value !== "-" && realtimeData.no2Value
+          ? parseFloat(realtimeData.no2Value).toFixed(3)
+          : "N/A";
+      const so2Value =
+        realtimeData.so2Value !== "-" && realtimeData.so2Value
+          ? parseFloat(realtimeData.so2Value).toFixed(3)
+          : "N/A";
+      const o3Value =
+        realtimeData.o3Value !== "-" && realtimeData.o3Value
+          ? parseFloat(realtimeData.o3Value).toFixed(3)
+          : "N/A";
       const grade = getGradeFromPM10(pm10Value);
 
       newAirData = {
         grade: grade,
         pm10: pm10Value.toString(),
-        pm25: pm25Value.toString(),
+        co: coValue,
+        no2: no2Value,
+        so2: so2Value,
+        o3: o3Value,
         time: realtimeData.dataTime
-          ? realtimeData.dataTime.split(" ")[1] // 시간 부분만 추출
+          ? realtimeData.dataTime.split(" ")[1]
           : new Date().toLocaleTimeString("ko-KR"),
       };
-      setApiKeyWarning(false); // API 호출 성공 시 경고 제거
     } else {
-      // 샘플 데이터 사용 로직 (기존 로직 유지)
       const samplePM10 = Math.floor(Math.random() * 100) + 20;
-      const samplePM25 = Math.floor(samplePM10 * 0.6);
+      const sampleCO = (Math.random() * 1).toFixed(3);
       const grade = getGradeFromPM10(samplePM10);
 
       newAirData = {
         grade: grade,
         pm10: samplePM10.toString(),
-        pm25: samplePM25.toString(),
+        co: sampleCO,
+        no2: (Math.random() * 0.05).toFixed(3),
+        so2: (Math.random() * 0.01).toFixed(3),
+        o3: (Math.random() * 0.04).toFixed(3),
         time: new Date().toLocaleTimeString("ko-KR"),
       };
 
-      // 그래프 데이터를 위한 샘플 (5개 항목)
-      const sampleChart = [
-        {
-          time: "09:00",
-          khai: 40,
-          grade: "좋음",
-          pm25: 10,
-          pm10: 20,
+      const sampleChart = Array.from({ length: 24 }, (_, i) => {
+        const hour = i.toString().padStart(2, "0");
+        const khai = Math.floor(Math.random() * 150);
+        return {
+          time: `${hour}:00`,
+          khai: khai,
+          grade: getKhaiGrade(khai),
+          pm10: Math.floor(khai * 0.5),
           "좋음 기준": 50,
           "보통 기준": 100,
-        },
-        {
-          time: "12:00",
-          khai: 55,
-          grade: "보통",
-          pm25: 20,
-          pm10: 40,
-          "좋음 기준": 50,
-          "보통 기준": 100,
-        },
-        {
-          time: "15:00",
-          khai: 70,
-          grade: "보통",
-          pm25: 35,
-          pm10: 60,
-          "좋음 기준": 50,
-          "보통 기준": 100,
-        },
-        {
-          time: "18:00",
-          khai: 110,
-          grade: "나쁨",
-          pm25: 50,
-          pm10: 100,
-          "좋음 기준": 50,
-          "보통 기준": 100,
-        },
-        {
-          time: "21:00",
-          khai: 80,
-          grade: "보통",
-          pm25: 40,
-          pm10: 70,
-          "좋음 기준": 50,
-          "보통 기준": 100,
-        },
-      ];
-      setKhaiChartData(sampleChart); // ⭐ 샘플 그래프 상태 업데이트
-
-      setApiKeyWarning(true); // API 호출 실패 시 경고 표시
+        };
+      });
+      setKhaiChartData(sampleChart);
+      setApiKeyWarning(true);
     }
 
-    // 🚨 알림 로직 (기존 로직 유지)
     if (
       isAlertSettingOn &&
       (newAirData.grade === "나쁨" || newAirData.grade === "매우나쁨")
@@ -668,59 +1130,66 @@ export default function App() {
     }
 
     setAirData(newAirData);
-
     setTimeout(() => {
       setIsRefreshing(false);
       setIsLoading(false);
-    }, 1000);
+    }, 500);
   }, [fetchAllAirQualityData, isAlertSettingOn]);
 
-  // ⭐ 초기 로드
   useEffect(() => {
     handleRefresh();
   }, [handleRefresh]);
 
-  // 기존 forecastData는 KhaiIndexChart에서 사용되지 않으므로 유지합니다.
-  const forecastData = [
-    { time: "09:00", value: "25", grade: "좋음" },
-    { time: "12:00", value: "28", grade: "보통" },
-    { time: "15:00", value: "35", grade: "보통" },
-    { time: "18:00", value: "42", grade: "나쁨" },
-    { time: "21:00", value: "30", grade: "보통" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      {/* 3. Header 렌더링 */}
-      <Header onRefresh={handleRefresh} isRefreshing={isRefreshing} />
+    <div className="min-h-screen bg-gray-50 pb-10 font-sans">
+      <Header
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
+        currentUser={currentUser}
+        onUserClick={handleUserClick}
+        onLogout={handleLogout}
+      />
 
-      {/* 4. NotificationSystem 렌더링 */}
+      {showLogin && (
+        <Login
+          onClose={() => setShowLogin(false)}
+          onSwitchToSignup={() => {
+            setShowLogin(false);
+            setShowSignup(true);
+          }}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
+
+      {showSignup && (
+        <Signup
+          onClose={() => setShowSignup(false)}
+          onSwitchToLogin={() => {
+            setShowSignup(false);
+            setShowLogin(true);
+          }}
+          onSignupSuccess={handleSignupSuccess}
+        />
+      )}
+
       <NotificationSystem
         message={notification.message}
         type={notification.type}
         onClose={() => setNotification({ message: "" })}
       />
 
-      {/* API 키 경고 */}
       {apiKeyWarning && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
             <div className="flex">
               <AlertCircle className="w-5 h-5 text-yellow-400 mr-3 flex-shrink-0" />
               <div className="text-sm text-yellow-700">
-                <p className="font-semibold mb-1">📌 API 키 설정 필요</p>
+                <p className="font-semibold mb-1">
+                  📌 API 키 설정 또는 데이터 로딩 실패
+                </p>
                 <p>
-                  현재 샘플 데이터를 표시하고 있습니다.
-                  <a
-                    href="https://www.data.go.kr/data/15073861/openapi.do"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline font-semibold"
-                  >
-                    공공데이터포털
-                  </a>
-                  에서 API 키를 발급받아 코드의 'YOUR_API_KEY_HERE'를
-                  교체하세요.
+                  현재 샘플 데이터를 표시하고 있습니다. API 서버 상태를 확인해
+                  주세요.
                 </p>
               </div>
             </div>
@@ -729,46 +1198,114 @@ export default function App() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
             <AirQualitySummary {...airData} isLoading={isLoading} />
           </div>
           <div className="lg:col-span-1">
-            {/* ⭐ HourlyForecast 대신 KhaiIndexChart 사용 및 데이터 전달 */}
             <KhaiIndexChart chartData={khaiChartData} isLoading={isLoading} />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 mb-6">
           <DashboardCard
-            title="생활 가이드 및 건강"
-            icon={Heart}
-            className="lg:col-span-2"
+            title="세부 오염물질 농도 현황 (가스)"
+            icon={CloudDrizzle}
+            className="col-span-1"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <RecommendationCard
-                title="외출 시 마스크 착용"
-                description="KF94 이상 권장"
-                icon={MaskIcon}
-                isSafe={airData.grade === "좋음" || airData.grade === "보통"}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <PollutantDetailCard
+                title="일산화탄소 (CO)"
+                value={airData.co}
+                unit="ppm"
+                type="CO"
+                icon={Flame}
+                isLoading={isLoading}
               />
-              <RecommendationCard
-                title="실외 활동 자제"
-                description="실내 활동 권장"
-                icon={MaskIcon}
-                isSafe={airData.grade === "좋음"}
+              <PollutantDetailCard
+                title="이산화질소 (NO₂)"
+                value={airData.no2}
+                unit="ppm"
+                type="NO2"
+                icon={CloudDrizzle}
+                isLoading={isLoading}
               />
-              <RecommendationCard
-                title="환기 시간 확인"
-                description={`오전 9-10시 (현재 대기: ${airData.grade})`}
-                icon={AirVentIcon}
-                isSafe={airData.grade === "좋음"}
+              <PollutantDetailCard
+                title="아황산가스 (SO₂)"
+                value={airData.so2}
+                unit="ppm"
+                type="SO2"
+                icon={Leaf}
+                isLoading={isLoading}
               />
-              <RecommendationCard
-                title="물 자주 마시기"
-                description="하루 2L 이상 (필수)"
-                icon={WaterIcon}
-                isSafe={true}
+              <PollutantDetailCard
+                title="오존 (O₃)"
+                value={airData.o3}
+                unit="ppm"
+                type="O3"
+                icon={Sun}
+                isLoading={isLoading}
               />
             </div>
           </DashboardCard>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <DashboardCard
+            title="생활 가이드 및 권장 사항"
+            icon={Heart}
+            className="lg:col-span-2"
+          >
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <RecommendationCard
+                title="KF94 마스크 착용"
+                description={`현재 등급: ${airData.grade} / 외출 시 필수 착용`}
+                icon={MaskIcon}
+                grade={airData.grade}
+                recommendedGrade="나쁨"
+              />
+              <RecommendationCard
+                title="무리한 실외 활동 자제"
+                description={`장시간 야외 운동을 자제하고 휴식 필요`}
+                icon={MaskIcon}
+                grade={airData.grade}
+                recommendedGrade="좋음"
+              />
+              <RecommendationCard
+                title="실내 환기 타이밍 확인"
+                description={`대기 좋음 시 3분 이내로 짧게 환기`}
+                icon={AirVentIcon}
+                grade={airData.grade}
+                recommendedGrade="좋음"
+              />
+              <RecommendationCard
+                title="충분한 물 섭취"
+                description="미세먼지 배출을 위해 수분 보충"
+                icon={WaterIcon}
+                grade={airData.grade}
+                recommendedGrade="모든"
+              />
+            </div>
+
+            <DashboardCard
+              title="👶 민감군(호흡기 환자, 노약자) 가이드"
+              icon={User}
+              className="mt-6 border-2 border-red-200 bg-red-50"
+            >
+              <div className="p-2">
+                <p className="text-sm font-semibold text-red-700 flex items-center mb-2">
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  대기질이 나쁨 이상일 때:
+                </p>
+                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-4">
+                  <li>**실외 활동은 무조건 금지**하고 실내에서 머무세요.</li>
+                  <li>필요시 주치의와 상담하세요.</li>
+                  <li>실내 공기청정기 **'강' 모드**로 가동을 권장합니다.</li>
+                </ul>
+              </div>
+            </DashboardCard>
+          </DashboardCard>
+
           <div className="lg:col-span-1 grid grid-rows-[auto_1fr] gap-6">
             <DashboardCard title="건강 관리 팁" icon={Heart}>
               <div className="space-y-2">
@@ -790,7 +1327,6 @@ export default function App() {
                 />
               </div>
             </DashboardCard>
-            {/* UserSettings에 상태 전달 */}
             <UserSettings
               isAlertSettingOn={isAlertSettingOn}
               setIsAlertSettingOn={setIsAlertSettingOn}
